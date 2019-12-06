@@ -1,4 +1,6 @@
 from collections import defaultdict
+import time
+time_start = time.perf_counter()
 #orbits = "COM)B B)C C)D D)E E)F B)G G)H D)I E)J J)K K)L".split()
 
 with open('tag06.txt') as f:
@@ -17,4 +19,5 @@ def count_orbits(node, counter):
 
 count_orbits('COM', 0)
 print(sum(orbit_counts.values()))
+print(time.perf_counter() - time_start)
   
