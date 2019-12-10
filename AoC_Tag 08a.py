@@ -12,7 +12,7 @@ pictures = []
 
 for i in range(0,len(puzzle_input),picture_länge):
   picture = puzzle_input[i:i+picture_länge]
-  pictures.append(picture)
+  pictures.append(pictures)
 
 
 ziel_picture = []
