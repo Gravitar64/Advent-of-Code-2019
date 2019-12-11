@@ -6,19 +6,17 @@ time_start = time.perf_counter()
 
 map = set()
 with open("tag10.txt") as f:
-  for y, line in enumerate(f):
-    for x, zeichen in enumerate(line):
+  for y, zeile in enumerate(f):
+    for x, zeichen in enumerate(zeile):
       if zeichen != '#': continue
       map.add(Vec(x,y))
 
-angles = defaultdict(set)
+winkels = defaultdict(set)
+for asteroid1 in map:
+  for asteroid2 in map:
+    if asteroid1 == asteroid2: continue
+    winkels[asteroid1].add(asteroid1.winkel(asteroid2))
 
-for a1 in map:
-  for a2 in map:
-    if a1 == a2: continue
-    angles[a1].add(a1.winkel(a2))
+lösung = sorted([(len(winkel), pos) for pos, winkel in winkels.items()])[-1]
 
-best_pos = sorted([(len(value), key) for key,value in angles.items()])[-1]
-
-print (best_pos)
-print(time.perf_counter() - time_start)
+print(f'Lösung: {lösung} ermittelt in {time.perf_counter()-time_start:0.3f} Sek.')
