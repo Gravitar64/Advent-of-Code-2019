@@ -55,7 +55,6 @@ def run(s, program_input):
 pos = Vec(0,0)
 rob_richt = 'u'
 panels = defaultdict(int)
-panels[pos] = 1
 gemalt = Counter()
 while True:
   farbe = run(s,panels[pos])
