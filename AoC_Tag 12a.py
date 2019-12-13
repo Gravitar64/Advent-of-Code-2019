@@ -20,9 +20,6 @@ with open('Tag12.txt') as f:
     line = list(map(int,line.split()))
     puzzle_input.append(Vec(*line))
 
-moons = []
-for pos in puzzle_input:
-  moons.append(Moon(pos))
 lösungen = []  
 
 for achsen_zähler in range(3):
@@ -49,7 +46,6 @@ for achsen_zähler in range(3):
     for moon in moons:
       moon.pos += moon.vel
     state = tuple(moon.state(achsen_zähler) for moon in moons)
-    #state = moons[0].state()
     if state == start_state:
       fertig = True
       lösungen.append(cycles)
