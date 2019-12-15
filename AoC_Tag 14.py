@@ -19,26 +19,35 @@ with open('tag14.txt') as f:
 
 
 einkaufsliste = defaultdict(int)
+überschüssig = defaultdict(int)
 def solve(element, needed_amount):
   if element not in elements:
     return
   bekomme = elements[element]['units']
   for e,a in elements[element]['component'].items():
+    if e == 'ORE':
+      print(f'benötigt von {e} = {needed_amount}, erhalte {bekomme}')
+      print(a * math.ceil(needed_amount/bekomme))
+      print(a * (needed_amount / bekomme))
+      überschüssig[element] += (a * math.ceil(needed_amount/bekomme))-(a * (needed_amount / bekomme))
     a *= math.ceil(needed_amount / bekomme)
-    if e != 'ORE':
-      einkaufsliste[e] += a
+    einkaufsliste[e] += a
     solve(e,a)
   return
 
 solve('FUEL',1)
 lösung = 0
-for name, needed in einkaufsliste.items():
-  if name not in ores: continue
-  bekomme, preis = ores[name]
-  ore = math.ceil(needed / bekomme) * preis
-  lösung += ore
-  print(f'Consume {ore:>10} ORE for {needed:>5} {name} ({preis} ORES for {bekomme} {name})')
+
+
+lösung = einkaufsliste['ORE']
+for e,a in überschüssig.items():
+  diff = a // elements[e]['units'] * elements[e]['units']
+  print(f'Ore reduziert um {diff} wg. überschüssige {e} {a}')
+  lösung -= diff
+
   
 print(f'Lösung = {lösung:>9} ORE')
+print(f'Lösung - korrektur = {lösung - überschüssig["ORE"]}')
 print(einkaufsliste)
+print(überschüssig)
 
