@@ -1,5 +1,8 @@
 from collections import defaultdict
 import math
+import time
+
+time_start = time.perf_counter()
 
 elements = defaultdict(dict)
 ores = {}
@@ -15,39 +18,25 @@ with open('tag14.txt') as f:
       units[c] = int(u)
       if c == 'ORE':
         ores[output] = [int(income), int(u)]
-    elements[output]['component'] = units  
+    elements[output]['components'] = units  
 
 
-einkaufsliste = defaultdict(int)
-überschüssig = defaultdict(int)
-def solve(element, needed_amount):
-  if element not in elements:
-    return
-  bekomme = elements[element]['units']
-  for e,a in elements[element]['component'].items():
-    if e == 'ORE':
-      print(f'benötigt von {e} = {needed_amount}, erhalte {bekomme}')
-      print(a * math.ceil(needed_amount/bekomme))
-      print(a * (needed_amount / bekomme))
-      überschüssig[element] += (a * math.ceil(needed_amount/bekomme))-(a * (needed_amount / bekomme))
-    a *= math.ceil(needed_amount / bekomme)
-    einkaufsliste[e] += a
-    solve(e,a)
-  return
-
-solve('FUEL',1)
-lösung = 0
-
-
-lösung = einkaufsliste['ORE']
-for e,a in überschüssig.items():
-  diff = a // elements[e]['units'] * elements[e]['units']
-  print(f'Ore reduziert um {diff} wg. überschüssige {e} {a}')
-  lösung -= diff
+def solve_ore(elements, fuel=1):
+  required = defaultdict(int)
+  required["FUEL"] = fuel
+  stack = [elements["FUEL"]]
+  
+  while len(stack) > 0:
+    element = stack.pop()
+    needed = math.ceil(required[element["name"]] / element["units"])
+    for component, units in element["components"].items():
+      required[component] += needed * units
+      if component in elements:
+        stack.append(elements[component])
+    required[element["name"]] -= needed * element["units"]
+  return required["ORE"]
 
   
-print(f'Lösung = {lösung:>9} ORE')
-print(f'Lösung - korrektur = {lösung - überschüssig["ORE"]}')
-print(einkaufsliste)
-print(überschüssig)
+print(f'Lösung = {solve_ore(elements)} ORE in {time.perf_counter()-time_start} Sek.')
+
 
