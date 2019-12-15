@@ -1,5 +1,8 @@
 from collections import defaultdict
 import math
+import time
+
+time_start = time.perf_counter()
 
 reactions = defaultdict(dict)
 with open('tag14.txt') as f:
@@ -14,9 +17,9 @@ with open('tag14.txt') as f:
       components[c] = int(u)
     reactions[chemical]['components'] = components
 
-def solve(reactions):
+def solve(reactions, fuel):
   required = defaultdict(int)
-  required['FUEL'] = 1
+  required['FUEL'] = fuel
   stack = [reactions['FUEL']]
   while stack:
     reaction = stack.pop()
@@ -28,5 +31,24 @@ def solve(reactions):
     required[reaction['name']] -= reaction['units'] * multi
   return required['ORE']
 
-print(f'Lösung = {solve(reactions)}')
+def solve2(guess):
+  step = 500000
+  fertig = False
+  low = True
+  ore = 0
+  while step > 0.5:
+    ore = solve(reactions, guess)
+    if ore < 1_000_000_000_000:
+      guess += step
+      if not low:
+        low = True
+        step /= 2
+    else:
+      guess -= step
+      if low:
+        low = False
+        step /= 2
+  return int(guess)
+
+print(f'Lösung = {solve2(1102168)} in {time.perf_counter() - time_start} Sek.')
 
