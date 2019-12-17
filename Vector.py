@@ -23,4 +23,5 @@ class Vec(tuple):
 
   def winkel(self, other):
     """Liefert den Winkel in Grad zwischen Vec1 und Vec2. Senkrecht oben ist 0°, die Gradzahl wächst gegen den Uhrzeigersinn"""
-    return math.degrees(math.atan2(*(self - other)) % (2 * math.pi))   
+    return math.degrees(math.atan2(*(self - other)) % (2 * math.pi))  
+  
