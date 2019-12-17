@@ -3,22 +3,22 @@ import time
 
 time_start = time.perf_counter()
 
-standard_pattern = [0, 1, 0, -1]
-input_signal = 59791911701697178620772166487621926539855976237879300869872931303532122404711706813176657053802481833015214226705058704017099411284046473395211022546662450403964137283487707691563442026697656820695854453826690487611172860358286255850668069507687936410599520475680695180527327076479119764897119494161366645257480353063266653306023935874821274026377407051958316291995144593624792755553923648392169597897222058613725620920233283869036501950753970029182181770358827133737490530431859833065926816798051237510954742209939957376506364926219879150524606056996572743773912030397695613203835011524677640044237824961662635530619875905369208905866913334027160178
-signal = [int(a) for a in str(input_signal)]
+standard_pattern = deque([0, 1, 0, -1])
+with open('tag16.txt') as f:
+  puzzle_input = f.readline()
 
+input_signal = [int(x) for x in puzzle_input]
 
-def generate_pattern(anzahl):
+def generate_pattern(länge_input):
   patterns = {}
-  for phase in range(1,anzahl+1):
+  for phase in range(1,länge_input+1):
     pattern = deque()
     for zahl in standard_pattern:
       for i in range(phase):
         pattern.append(zahl)
     pattern.rotate(-1)
-    patterns[phase] = pattern
+    patterns[phase] = pattern    
   return patterns
-
 
 def fft(signal):
   fft = []
@@ -30,11 +30,10 @@ def fft(signal):
       pattern.rotate(-1)
     last_digit = abs(summe) % 10
     fft.append(last_digit)
-  return fft 
+  return fft
 
-patterns = generate_pattern(len(signal))
-for phase in range(100):
-  signal = fft(signal)
+patterns = generate_pattern(len(input_signal))
+for _ in range(100):
+  input_signal = fft(input_signal)
 
-print(f'Lösung = {int("".join(map(str,signal[:8])))} in {time.perf_counter() - time_start} Sek')
-
+print(f'Lösung = {"".join(map(str,input_signal[:8]))} in {time.perf_counter()-time_start}')
