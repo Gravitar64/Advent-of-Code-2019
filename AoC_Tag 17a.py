@@ -109,27 +109,24 @@ def run_scaffold(map, robot):
 def generate_inputs(patterns, enc_str, trans):
   trans_invers = {v: k for k, v in trans.items()}
   main_routine = enc_str.replace(patterns[0], 'A,').replace(
-      patterns[1], 'B,').replace(patterns[2], 'C,')[:-1]
-  func_a = ','.join([trans_invers[a][:1]+','+trans_invers[a][1:]
-                     for a in patterns[0]])
-  func_b = ','.join([trans_invers[a][:1]+','+trans_invers[a][1:]
-                     for a in patterns[1]])
-  func_c = ','.join([trans_invers[a][:1]+','+trans_invers[a][1:]
-                     for a in patterns[2]])
-  return main_routine + '\n' + func_a + '\n' + func_b + '\n' + func_c + '\n' + 'n\n'
+      patterns[1], 'B,').replace(patterns[2], 'C,')[:-1]+'\n'
+  for i in range(3):
+    main_routine += ','.join([trans_invers[a][:1]+',' +
+                              trans_invers[a][1:] for a in patterns[i]])+'\n'
+  return main_routine + 'n\n'
 
 
 def find_functions(moves):
   mov = [moves[i]+moves[i+1] for i in range(0, len(moves), 2)]
   mov_str = mov_enc_str = ''.join(mov)
-  mov_enc, mov_enc_inv = {}, {}
-  enc = 65
+  mov_trans = {}
+  enc = 75
   for move in mov:
-    if move in mov_enc:
+    if move in mov_trans:
       continue
-    mov_enc[move] = chr(enc)
+    mov_trans[move] = chr(enc)
     enc += 1
-  for old, new in mov_enc.items():
+  for old, new in mov_trans.items():
     mov_enc_str = mov_enc_str.replace(old, new)
   while True:
     for i in range(1, 7):
@@ -141,9 +138,9 @@ def find_functions(moves):
       for j in range(1, len(b)):
         b_pat = b.replace(b[:j], '')
         if b_pat == '':
-          program_inputs = generate_inputs((a, b[:j], c), mov_enc_str, mov_enc)
+          program_inputs = generate_inputs(
+              (a, b[:j], c), mov_enc_str, mov_trans)
     break
-  mov_enc_inv = {v: k for k, v in mov_enc.items()}
   return program_inputs
 
 
@@ -157,6 +154,8 @@ moves = run_scaffold(karte, robot)
 inputs = find_functions(moves)
 intcode.load_inputs([ord(x) for x in inputs])
 intcode.run()
+# for item in intcode.output:
+#   print(chr(item), end='')
 lösung = intcode.output[-1]
 
 print(f'Lösung = {lösung} in {time.perf_counter()-start} Sek.')
