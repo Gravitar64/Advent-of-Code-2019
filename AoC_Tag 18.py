@@ -1,6 +1,10 @@
 from Vector import Vec
 from collections import deque, defaultdict
 import itertools as it
+import time
+
+time_start = time.perf_counter()
+
 
 walls = set()
 keys = {}
@@ -16,6 +20,7 @@ with open("tag18.txt") as f:
         keys[Vec(x, y)] = char
       elif char == '@':
         keys[Vec(x, y)] = char
+        start_pos = Vec(x,y)
 
 dors_inv = {v: k for k, v in dors.items()}
 
@@ -31,7 +36,7 @@ def keys_abstand(keys):
         nachb.append(neue_pos)
     return nachb
   
-  key2key = {}
+  key2key = defaultdict(list)
   for pos in keys:
     counter = 0
     key1 = keys[pos]
@@ -40,13 +45,13 @@ def keys_abstand(keys):
       pos, counter, way = stack.popleft()
       if pos in keys:
         key2 = keys[pos]
-        if key1 != key2:
+        if key1 != key2 and key2 != '@':
           needed_dors = set()
           for p in way:
             if p not in dors:
               continue
             needed_dors.add(dors[p])
-          key2key[key1+key2] = {'dist': counter, 'needed': needed_dors}
+          key2key[key1] += [{'zu':key2,'dist': counter, 'needed': needed_dors}]
       visited.add(pos)
       way.append(pos)
       for nachb in find_nachbarn(pos):
@@ -55,39 +60,39 @@ def keys_abstand(keys):
         stack.append([nachb, counter + 1, way.copy()])
   return key2key    
 
-key2key = keys_abstand(keys)
+def reachable_keys(key, coll_keys, besucht):
+  reachable = []
+  for v in key2key[key]:
+    if v['zu'] in besucht: continue
+    if not v['needed'].issubset(coll_keys): continue
+    reachable.append((v['dist'],v['zu']))
+  #reachable.sort()
+  return reachable   
 
-possible_keys = []
-for key in keys.values():
-  if key == '@':
-    continue
-  abst_key = '@'+key
-  needed = len(key2key[abst_key]['needed'])
-  dist = key2key[abst_key]['dist']
-  possible_keys.append((needed, dist, key))
-possible_keys.sort()
-
-possible_keys = [x[2] for x in possible_keys]
 best = 999999
-# for _ in range(1):
-for perm in it.permutations(possible_keys):
-  if key2key[perm[0]+perm[1]]['needed']:
-    continue
-  perm2 = ('@',) + perm
-  summe = 0
-  valid = True
-  collected_keys = set()
 
-  for i in range(0, len(perm2)-1):
-    p = perm2[i]+perm2[i+1]
-    #print(collected_keys,p[0], p[1])
-    if p[0] in dors_inv:
-      collected_keys.add(p[0])
-    if not key2key[p]['needed'].issubset(collected_keys):
-      valid = False
-      break
-    #print(perm2, p, key2key[p]['needed'], collected_keys)
-    summe += key2key[p]['dist']
-  if valid and summe < best:
-    best = summe
-    print(f'Best Way {perm2} mit {summe} Schritten')
+def shortest_way(key, coll_keys, besucht, dist, way):
+  global best
+  if dist >= best: return
+  way.append(key)
+  besucht.add(key)
+  if len(coll_keys) == len(keys)-1:
+    return way,dist
+  coll_keys.add(key)
+  for d, next_key in reachable_keys(key, coll_keys, besucht):
+    erg = shortest_way(next_key, coll_keys.copy(), besucht.copy(), dist+d, way.copy())
+    #if komp_way: return True
+    if erg:
+      w,d = erg
+      if d < best:
+        best_way = w
+        best = d
+        print(best, best_way, time.perf_counter()-time_start)
+
+
+key2key = keys_abstand(keys)
+shortest_way('@', set(), set(), 0, [])
+#print(best)
+
+
+
