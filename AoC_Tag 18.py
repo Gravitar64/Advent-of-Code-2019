@@ -1,11 +1,9 @@
 from Vector import Vec
 from collections import deque, defaultdict
-import itertools as it
 import time
 import random as rnd
 
 time_start = time.perf_counter()
-
 
 walls = set()
 keys = {}
@@ -44,15 +42,16 @@ def keys_abstand(keys):
     visited, stack = set([pos]), deque([[pos, counter, []]])
     while stack:
       pos, counter, way = stack.popleft()
+      
       if pos in keys:
         key2 = keys[pos]
         if key1 != key2 and key2 != '@':
-          needed = set()
+          needkeys = set()
           for p in way:
             if p not in dors:
               continue
-            needed.add(dors[p])
-          key2key[key1].append((key2, counter, needed))
+            needkeys.add(dors[p])
+          key2key[key1].append((key2, counter, needkeys))
       visited.add(pos)
       way.append(pos)
       for nachb in find_nachbarn(pos):
@@ -66,38 +65,36 @@ def reachable_keys(key, havekeys):
   reachable = []
   for zu, dist, needkeys in key2key[key]:
     if zu in havekeys:
-      continue #den ziel-key habe ich schon, da brauche ich nicht mehr hin
+      continue
     if not needkeys.issubset(havekeys):
-      continue #ich habe nicht alle keys (havekeys), die ich für diesen ziel-key benötige (needkeys)
-    reachable.append((dist, zu))
+      continue
+    reachable.append((dist,zu))
+  #reachable.sort()
   return reachable
 
 
-seen = {}
-def minwalk(start, havekeys):
-  hks = ''.join(sorted(list(havekeys)))
-  if (start, hks) in seen:
-    return seen[start, hks]
-  keys = reachable_keys(start, havekeys)
+cache = {}
+
+
+def shortest_way(key, havekeys):
+  coll_str = ''.join(sorted(list(havekeys)))
+  if (key, coll_str) in cache:
+    return cache[key, coll_str]
+  keys = reachable_keys(key, havekeys)
   if not keys:
-    # done!
     ans = 0
   else:
-    poss = []
-    for dist, ch in keys:
-      #print(start, ch, havekeys, dist)
-      havekeys.add(ch)
-      walk_dist = dist + minwalk(ch, havekeys)
-      havekeys.remove(ch)
-      poss.append(walk_dist)
-    ans = min(poss)
-  seen[start, hks] = ans
+    ergebnisse = []
+    for d, next_key in keys:
+      havekeys.add(next_key)
+      ergebnisse.append(d + shortest_way(next_key, havekeys))
+      havekeys.remove(next_key)
+    ans = min(ergebnisse)
+  cache[key, coll_str] = ans
   return ans
 
 
 key2key = keys_abstand(keys)
-
-print(minwalk('@', set()), time.perf_counter()-time_start)
-
-
-#print(f'Steps={best} in {time.perf_counter()-time_start:.2f} Sek -> {best_way}')
+print(
+    f'Lösung = {shortest_way("@", set())} Steps in {time.perf_counter()-time_start} Sek.'
+)
