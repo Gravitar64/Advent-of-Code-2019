@@ -1,9 +1,8 @@
 from Vector import Vec
-from collections import deque,defaultdict
+from collections import deque, defaultdict
 import time
 
 time_start = time.perf_counter()
-
 
 walls = set()
 keys = {}
@@ -15,7 +14,7 @@ with open("tag18.txt") as f:
         walls.add(Vec(x, y))
       elif char == '@':
         keys[Vec(x, y)] = char
-        start_pos = Vec(x,y)
+        start_pos = Vec(x, y)
       elif char.isupper():
         dors[Vec(x, y)] = char.lower()
       elif char.islower():
@@ -25,7 +24,7 @@ dors_inv = {v: k for k, v in dors.items()}
 
 
 def keys_abstand(keys):
-  
+
   def find_nachbarn(pos):
     richtungen = [Vec(1, 0), Vec(-1, 0), Vec(0, 1), Vec(0, -1)]
     nachb = []
@@ -34,7 +33,7 @@ def keys_abstand(keys):
       if neue_pos not in walls:
         nachb.append(neue_pos)
     return nachb
-  
+
   key2key = defaultdict(list)
   for pos in keys:
     counter = 0
@@ -45,47 +44,55 @@ def keys_abstand(keys):
       if pos in keys:
         key2 = keys[pos]
         if key1 != key2 and key2 != '@':
-          needed_dors = set()
+          needkeys = set()
           for p in way:
             if p not in dors:
               continue
-            needed_dors.add(dors[p])
-          key2key[key1] += [{'zu':key2,'dist': counter, 'needed': needed_dors}]
+            needkeys.add(dors[p])
+          key2key[key1].append((key2, counter, needkeys))
       visited.add(pos)
       way.append(pos)
       for nachb in find_nachbarn(pos):
         if nachb in visited:
           continue
         stack.append([nachb, counter + 1, way.copy()])
-  return key2key    
+  return key2key
 
-def reachable_keys(key, coll_keys):
+
+def reachable_keys(key, havekeys):
   reachable = []
-  for v in key2key[key]:
-    if v['zu'] in coll_keys: continue
-    if not v['needed'].issubset(coll_keys): continue
-    reachable.append((v['dist'],v['zu']))
+  for zu, dist, needkeys in key2key[key]:
+    if zu in havekeys:
+      continue
+    if not needkeys.issubset(havekeys):
+      continue
+    reachable.append((dist,zu))
   #reachable.sort()
-  return reachable   
+  return reachable
 
 
 cache = {}
-def shortest_way(key, coll_keys):
-  coll_str = ''.join(sorted(list(coll_keys)))
-  if (key,coll_str) in cache:
-    return cache[key,coll_str]
-  keys = reachable_keys(key, coll_keys)
+
+
+def shortest_way(key, havekeys):
+  coll_str = ''.join(sorted(list(havekeys)))
+  if (key, coll_str) in cache:
+    return cache[key, coll_str]
+  keys = reachable_keys(key, havekeys)
   if not keys:
     ans = 0
   else:
     ergebnisse = []
     for d, next_key in keys:
-      coll_keys.add(next_key)  
-      ergebnisse.append(d + shortest_way(next_key, coll_keys))
-      coll_keys.remove(next_key)
-    ans = min(ergebnisse)  
-  cache[key,coll_str] = ans
-  return ans  
+      havekeys.add(next_key)
+      ergebnisse.append(d + shortest_way(next_key, havekeys))
+      havekeys.remove(next_key)
+    ans = min(ergebnisse)
+  cache[key, coll_str] = ans
+  return ans
+
 
 key2key = keys_abstand(keys)
-print(shortest_way('@', set()),time.perf_counter()-time_start)
+print(
+    f'Lösung = {shortest_way("@", set())} Steps in {time.perf_counter()-time_start} Sek.'
+)
