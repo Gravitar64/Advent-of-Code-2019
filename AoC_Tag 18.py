@@ -1,6 +1,5 @@
 from Vector import Vec
-from collections import deque, defaultdict
-import itertools as it
+from collections import deque,defaultdict
 import time
 
 time_start = time.perf_counter()
@@ -14,13 +13,13 @@ with open("tag18.txt") as f:
     for x, char in enumerate(line.strip()):
       if char == '#':
         walls.add(Vec(x, y))
-      elif ord(char) in range(ord('A'), ord('Z')):
-        dors[Vec(x, y)] = char.lower()
-      elif ord(char) in range(ord('a'), ord('z')):
-        keys[Vec(x, y)] = char
       elif char == '@':
         keys[Vec(x, y)] = char
         start_pos = Vec(x,y)
+      elif char.isupper():
+        dors[Vec(x, y)] = char.lower()
+      elif char.islower():
+        keys[Vec(x, y)] = char
 
 dors_inv = {v: k for k, v in dors.items()}
 
@@ -60,39 +59,33 @@ def keys_abstand(keys):
         stack.append([nachb, counter + 1, way.copy()])
   return key2key    
 
-def reachable_keys(key, coll_keys, besucht):
+def reachable_keys(key, coll_keys):
   reachable = []
   for v in key2key[key]:
-    if v['zu'] in besucht: continue
+    if v['zu'] in coll_keys: continue
     if not v['needed'].issubset(coll_keys): continue
     reachable.append((v['dist'],v['zu']))
   #reachable.sort()
   return reachable   
 
-best = 999999
 
-def shortest_way(key, coll_keys, besucht, dist, way):
-  global best
-  if dist >= best: return
-  way.append(key)
-  besucht.add(key)
-  if len(coll_keys) == len(keys)-1:
-    return way,dist
-  coll_keys.add(key)
-  for d, next_key in reachable_keys(key, coll_keys, besucht):
-    erg = shortest_way(next_key, coll_keys.copy(), besucht.copy(), dist+d, way.copy())
-    #if komp_way: return True
-    if erg:
-      w,d = erg
-      if d < best:
-        best_way = w
-        best = d
-        print(best, best_way, time.perf_counter()-time_start)
-
+cache = {}
+def shortest_way(key, coll_keys):
+  coll_str = ''.join(sorted(list(coll_keys)))
+  if (key,coll_str) in cache:
+    return cache[key,coll_str]
+  keys = reachable_keys(key, coll_keys)
+  if not keys:
+    ans = 0
+  else:
+    ergebnisse = []
+    for d, next_key in keys:
+      coll_keys.add(next_key)  
+      ergebnisse.append(d + shortest_way(next_key, coll_keys))
+      coll_keys.remove(next_key)
+    ans = min(ergebnisse)  
+  cache[key,coll_str] = ans
+  return ans  
 
 key2key = keys_abstand(keys)
-shortest_way('@', set(), set(), 0, [])
-#print(best)
-
-
-
+print(shortest_way('@', set()),time.perf_counter()-time_start)
