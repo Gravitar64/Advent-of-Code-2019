@@ -41,6 +41,7 @@ def keys_abstand(keys):
     visited, stack = set([pos]), deque([[pos, counter, []]])
     while stack:
       pos, counter, way = stack.popleft()
+      
       if pos in keys:
         key2 = keys[pos]
         if key1 != key2 and key2 != '@':
