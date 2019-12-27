@@ -2,8 +2,10 @@
 # https://www.reddit.com/r/adventofcode/comments/e85b6d/2019_day_9_solutions/faajddr/?context=3
 
 from collections import defaultdict, deque
+from Vector import Vec
 import time
-import itertools as iter
+
+
 
 class Intcode:
   def __init__(self, program):
@@ -13,12 +15,13 @@ class Intcode:
     self.input = []
     self.output = []
 
+  def reset(self):
+    self.ip, self.rb = 0,0
+    self.mem = defaultdict(int, enumerate(program))
+    
+  
   def load_input(self,data):
     self.input.extend(data)
-
-  def reset(self):
-    self.ip, self.rb = 0 , 0
-    self.mem = defaultdict(int, enumerate(program))  
   
   def run(self):
     while True:
@@ -52,12 +55,15 @@ class Intcode:
         self.rb += reads[0]
 
 
-time_start = time.perf_counter()
+start = time.perf_counter()
 with open('Tag19.txt') as f:
   program = list(map(int, f.readline().split(',')))
 
 
+
+
 intcode = Intcode(program)
+
 for y in range(50):
   for x in range(50):
     intcode.load_input([x,y])
@@ -65,4 +71,6 @@ for y in range(50):
     intcode.reset()
 
 lösung = sum(intcode.output)
-print(f'Lösung = {lösung} in {time.perf_counter()-time_start} Sek.')
+
+
+print(f'Lösung = {lösung} in {time.perf_counter()-start} Sek.')

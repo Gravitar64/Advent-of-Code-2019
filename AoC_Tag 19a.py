@@ -2,8 +2,10 @@
 # https://www.reddit.com/r/adventofcode/comments/e85b6d/2019_day_9_solutions/faajddr/?context=3
 
 from collections import defaultdict, deque
+from Vector import Vec
 import time
-import itertools as iter
+
+
 
 class Intcode:
   def __init__(self, program):
@@ -13,12 +15,13 @@ class Intcode:
     self.input = []
     self.output = []
 
+  def reset(self):
+    self.ip, self.rb = 0,0
+    self.mem = defaultdict(int, enumerate(program))
+    
+  
   def load_input(self,data):
     self.input.extend(data)
-
-  def reset(self):
-    self.ip, self.rb = 0 , 0
-    self.mem = defaultdict(int, enumerate(program))  
   
   def run(self):
     while True:
@@ -52,30 +55,26 @@ class Intcode:
         self.rb += reads[0]
 
 
-time_start = time.perf_counter()
+start = time.perf_counter()
 with open('Tag19.txt') as f:
   program = list(map(int, f.readline().split(',')))
 
-def inside_beam(intcode, x,y):
+def inTraktorStrahl(intcode, x, y):
   intcode.load_input([x,y])
   intcode.run()
   intcode.reset()
-  return intcode.output[-1] == 1
+  return intcode.output[-1]
 
-def part2(program):
+def teil2(program):
   intcode = Intcode(program)
   x = 0
-  for y in range(100, 100000):
-    while not inside_beam(intcode, x, y):
+  for y in range(99,100_000):
+    while not inTraktorStrahl(intcode, x, y):
       x += 1
-    if inside_beam(intcode, x+99, y-99):
-      return 10000*x + (y-99)
+    if inTraktorStrahl(intcode, x+99, y-99):
+      return x,y,x*10_000+y-99
+
+x,y,lösung = teil2(program)
 
 
-
-print(f'Lösung = {part2(program)} in {time.perf_counter()-time_start} Sek.')
-  
-
-
-
-#print(f'Lösung = {lösung} in {time.perf_counter()-time_start} Sek.')
+print(f'Lösung = {lösung} auf Position {x,y} in {time.perf_counter()-start} Sek.')
