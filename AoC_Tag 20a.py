@@ -1,4 +1,4 @@
-from collections import deque, defaultdict
+from collections import deque
 import time
 
 time_start = time.perf_counter()
@@ -6,67 +6,62 @@ time_start = time.perf_counter()
 weg = set()
 portal_buchstaben = {}
 with open('tag20.txt') as f:
-  for y, line in enumerate(f):
-    for x, char in enumerate(line.rstrip('\n')):
-      if char == '.':
-        weg.add((x, y))
-      if char.isupper():
-        portal_buchstaben[x, y] = char
-width, height = x, y
-
+  for y, zeile in enumerate(f):
+    for x, zeichen in enumerate(zeile.rstrip('\n')):
+      if zeichen == '.':
+        weg.add((x,y))
+      elif zeichen.isupper():
+        portal_buchstaben[x,y] = zeichen
+höhe, breite = y,x        
 
 def lieferPortalBezeichnung(pos):
   portalBezeichnung = ''
-  for r in [(0,1), (0,-1), (1,0), (-1,0)]:
+  for richtung in [(0,1), (0,-1), (-1,0), (1,0)]:
     x,y = pos
     while True:
-      x,y = x+r[0], y+r[1]
+      x,y = x+richtung[0], y+richtung[1]
       if (x,y) in portal_buchstaben:
         portalBezeichnung += portal_buchstaben[x,y]
       else:
         break
   return ''.join(sorted(portalBezeichnung))
 
-
-def finde_portale(weg):
-  portals = {pos:[lieferPortalBezeichnung(pos)] for pos in weg if lieferPortalBezeichnung(pos)}
-  portals_inv = {v[0]:k for k,v in portals.items()}
-  start,ziel = portals_inv['AA'], portals_inv['ZZ']
+def ermittelPortale(weg):
+  portals = {pos: [lieferPortalBezeichnung(pos)] for pos in weg if lieferPortalBezeichnung(pos)}
+  portal_invers = {v[0]:k for k,v in portals.items()}
+  start, ziel = portal_invers['AA'], portal_invers['ZZ']
+  del portals[start]
+  del portals[ziel]
   for pos1, portal1 in portals.items():
     for pos2, portal2 in portals.items():
-      if pos1 == pos2:
-        continue
+      if pos1 == pos2: continue
       if portal1 == portal2:
         portals[pos1].append(pos2)
         portals[pos2].append(pos1)
-  del portals[start]
-  del portals[ziel]
-
   for x,y in portals:
-    level = -1 if x in (2, width-2) or y in (2, height-2) else 1
-    portals[(x,y)].append(level)
+    level = -1 if x in (2,breite-2) or y in (2,höhe-2) else 1
+    portals[x,y].append(level)
   return start, ziel, portals
 
-def bfs(portals, weg, start, ziel):
+def bfs(start,ziel,weg,portals):
   level = 0
-  visited, stack = set((start, 0)), deque([[start, 0, level]])
+  besucht, stack = set(), deque([[start,0,level]])
   while stack:
-    pos, dist, level = stack.popleft()
-    if level < 0 or (pos, level) in visited:
+    pos, dist,level = stack.popleft()
+    if (pos,level) in besucht or level < 0:
       continue
     if pos == ziel and level == 0:
-      print(f'Solution found at Pos. {pos} on Level {level}')
       return dist
-    visited.add((pos, level))
+    besucht.add((pos,level))
     if pos in portals:
-      name, p, lv = portals[pos]
-      stack.append([p, dist+1, level+lv])
-    for r in [(0, 1), (0, -1), (1, 0), (-1, 0)]:
-      nachbar = pos[0]+r[0], pos[1]+r[1]
-      if nachbar not in weg: continue 
-      stack.append([nachbar, dist+1, level])
+      name, sprungziel, lv = portals[pos]
+      stack.append([sprungziel, dist + 1, level+lv])
+    for richtung in [(0,1), (0,-1), (-1,0), (1,0)]:
+      nachbar = pos[0] + richtung[0], pos[1]+richtung[1]
+      if nachbar not in weg: continue
+      stack.append([nachbar, dist+1,level])
+
+start, ziel, portals = ermittelPortale(weg)
+print(f'Lösung = {bfs(start,ziel,weg,portals)} Steps in {time.perf_counter()-time_start} Sek.')
 
 
-start, ziel, portals = finde_portale(weg)
-print(
-    f'Lösung = {bfs(portals,weg,start,ziel)} in {time.perf_counter() - time_start} Sek.') 
