@@ -34,11 +34,11 @@ def ascii2txt():
 
 def parse():
   status = ascii2txt()
-  if (room := re.findall('== ([\w ]+) ==', status)):
+  if (room := re.findall('== ([\w ]+) ==', status)): 
     room = room[0]
-  if (item := re.findall('Items here:\n- ([\w \n-]+)\n\n', status)):
+  if (item := re.findall('Items here:\n- ([\w \n-]+)\n\n', status)): 
     item = item[0]
-  if (doors := re.findall('Doors here lead:\n- ([\w \n-]+)\n\n', status)):
+  if (doors := re.findall('Doors here lead:\n- ([\w \n-]+)\n\n', status)): 
     doors = set(doors[0].split('\n- '))
   return room, item, doors
 
@@ -96,13 +96,12 @@ def solve():
   _, _, doors = parse()
   inventory = bruteForceCombinations(inventory, (doors - noDir).pop())
   print(f'The right inventory items are: {inventory}')
-  return ''.join(chr(n) for n in INTCODE.output).split()[-8]
+  return ascii2txt().split()[-8]
 
 
 start = time.perf_counter()
 OPP_DIRS = {'north': 'south', 'south': 'north', 'west': 'east', 'east': 'west'}
-TOXIC = {'photons', 'escape pod', 'molten lava',
-         'giant electromagnet', 'infinite loop'}
+TOXIC = {'photons', 'escape pod', 'molten lava', 'giant electromagnet', 'infinite loop'}
 INTCODE = Intcode(load('tag25.txt'))
 
 print(f'Part 1: {solve()}')
