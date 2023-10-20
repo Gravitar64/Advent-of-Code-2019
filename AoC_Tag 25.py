@@ -9,22 +9,22 @@ def load(file):
     return list(map(int, f.read().split(',')))
 
 
-def take_item(item):
-  send_input(f'take {item}')
+def take(item):
+  send(f'take {item}')
   return {item}
 
 
-def drop_item(item):
-  send_input(f'drop {item}')
+def drop(item):
+  send(f'drop {item}')
   return {item}
 
 
 def goto(door):
   INTCODE.output = []
-  send_input(door)
+  send(door)
 
 
-def send_input(msg):
+def send(msg):
   INTCODE.input.extend([ord(c) for c in msg + '\n'])
 
 
@@ -56,7 +56,7 @@ def crawl_rooms(target=None):
     INTCODE.run()
     room2, item2, doors2 = parse()
     if target == room2:  return {OPP_DIRS[door]}
-    if item2 and item2 not in TOXIC:  inventory |= take_item(item2)
+    if item2 and item2 not in TOXIC:  inventory |= take(item2)
     if room2 in seen:  continue
     queue.append((room2, OPP_DIRS[door]))
     for door2 in (doors2 - {OPP_DIRS[door]}):
@@ -64,25 +64,25 @@ def crawl_rooms(target=None):
   return inventory
 
 
-def bruteForceCombinations(current_items, all_items, door):
-  for item in all_items:
-    take_item(item)
+def bruteForceCombinations(current_items, inventory, door):
+  for item in inventory:
+    take(item)
     goto(door)
     if INTCODE.run() == 'terminate': return current_items | {item}
     if 'lighter' in ascii2txt(): 
-      drop_item(item)
+      drop(item)
       continue
-    result = bruteForceCombinations(current_items|{item}, all_items-{item}, door)
+    result = bruteForceCombinations(current_items|{item}, inventory-{item}, door)
     if result: return result
-    drop_item(item)
+    drop(item)
   
 
 def solve():
   inventory = crawl_rooms(INTCODE)
   noDir = crawl_rooms('Security Checkpoint')
   _, _, doors = parse()
-  for item in inventory: drop_item(item)
-  inventory = bruteForceCombinations(set(), inventory.copy(),(doors - noDir).pop())
+  for item in inventory: drop(item)
+  inventory = bruteForceCombinations(set(), inventory,(doors - noDir).pop())
   print(f'The right inventory items are: {inventory}')
   return ascii2txt().split()[-8]
 
