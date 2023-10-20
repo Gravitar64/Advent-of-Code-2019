@@ -64,37 +64,25 @@ def crawl_rooms(target=None):
   return inventory
 
 
-def bruteForceCombinations(inventory, door):
-  # identify those items, wich are as single item heavier as an android
-  all_items = inventory.copy()
+def bruteForceCombinations(current_items, all_items, door):
   for item in all_items:
-    drop_item(item)
-  for item in inventory:
     take_item(item)
     goto(door)
-    INTCODE.run()
-    if 'lighter' in ascii2txt():  all_items -= {item}
+    if INTCODE.run() == 'terminate': return current_items | {item}
+    if 'lighter' in ascii2txt(): 
+      drop_item(item)
+      continue
+    result = bruteForceCombinations(current_items|{item}, all_items-{item}, door)
+    if result: return result
     drop_item(item)
-  inventory = set()
-
-  # all possible combinations for those items minus too heavy ones
-  for n in range(len(all_items), 0, -1):
-    for combi in itertools.combinations(all_items, n):
-      needed = set(combi) - inventory
-      not_needed = inventory - set(combi)
-      for item in needed:
-        inventory |= take_item(item)
-      for item in not_needed:
-        inventory -= drop_item(item)
-      goto(door)
-      if INTCODE.run() == 'terminate': return inventory
-
+  
 
 def solve():
   inventory = crawl_rooms(INTCODE)
   noDir = crawl_rooms('Security Checkpoint')
   _, _, doors = parse()
-  inventory = bruteForceCombinations(inventory, (doors - noDir).pop())
+  for item in inventory: drop_item(item)
+  inventory = bruteForceCombinations(set(), inventory.copy(),(doors - noDir).pop())
   print(f'The right inventory items are: {inventory}')
   return ascii2txt().split()[-8]
 
