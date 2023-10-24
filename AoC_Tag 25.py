@@ -64,14 +64,14 @@ def crawl_rooms(target=None):
   return all_items
 
 
+heavy = set()
 def bruteForceCombinations(holding_items, remaining_items, door):
   for item in remaining_items:
+    if any(h.issubset(holding_items|{item}) for h in heavy): continue
     new_holding = holding_items|take(item)
     goto(door)
     if INTCODE.run() == 'terminate': return new_holding
-    if 'lighter' in ascii2txt(): 
-      drop(item)
-      continue
+    if 'lighter' in ascii2txt(): heavy.add(frozenset(new_holding))
     result = bruteForceCombinations(new_holding, remaining_items-{item}, door)
     if result: return result
     drop(item)
