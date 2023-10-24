@@ -64,15 +64,15 @@ def crawl_rooms(target=None):
   return inventory
 
 
-def bruteForceCombinations(current_items, inventory, door):
-  for item in inventory:
-    take(item)
+def bruteForceCombinations(holding_items, remaining_items, door):
+  for item in remaining_items:
+    new_holding = holding_items|take(item)
     goto(door)
-    if INTCODE.run() == 'terminate': return current_items | {item}
+    if INTCODE.run() == 'terminate': return new_holding
     if 'lighter' in ascii2txt(): 
       drop(item)
       continue
-    result = bruteForceCombinations(current_items|{item}, inventory-{item}, door)
+    result = bruteForceCombinations(new_holding, remaining_items-{item}, door)
     if result: return result
     drop(item)
   
