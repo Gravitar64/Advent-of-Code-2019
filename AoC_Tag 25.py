@@ -44,7 +44,7 @@ def parse():
 
 
 def crawl_rooms(target=None):
-  seen, inventory = set(), set()
+  seen, all_items = set(), set()
   INTCODE.run()
   room, _, doors = parse()
   queue = [(room, door) for door in doors]
@@ -56,12 +56,12 @@ def crawl_rooms(target=None):
     INTCODE.run()
     room2, item2, doors2 = parse()
     if target == room2:  return {OPP_DIRS[door]}
-    if item2 and item2 not in TOXIC:  inventory |= take(item2)
+    if item2 and item2 not in TOXIC:  all_items |= take(item2)
     if room2 in seen:  continue
     queue.append((room2, OPP_DIRS[door]))
     for door2 in (doors2 - {OPP_DIRS[door]}):
       queue.append((room2, door2))
-  return inventory
+  return all_items
 
 
 def bruteForceCombinations(holding_items, remaining_items, door):
@@ -78,12 +78,12 @@ def bruteForceCombinations(holding_items, remaining_items, door):
   
 
 def solve():
-  inventory = crawl_rooms(INTCODE)
+  all_items = crawl_rooms(INTCODE)
   noDir = crawl_rooms('Security Checkpoint')
   _, _, doors = parse()
-  for item in inventory: drop(item)
-  inventory = bruteForceCombinations(set(), inventory,(doors - noDir).pop())
-  print(f'The right inventory items are: {inventory}')
+  for item in all_items: drop(item)
+  holding_items = bruteForceCombinations(set(), all_items,(doors - noDir).pop())
+  print(f'The right inventory items are: {holding_items}')
   return ascii2txt().split()[-8]
 
 
